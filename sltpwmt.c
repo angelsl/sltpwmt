@@ -119,7 +119,7 @@ static void do_pulse_vs(pa_context *c, const pa_sink_info *i, int eol, void *use
     switch (pulse_op) {
     case 's': {
         int new_mute = !i->mute;
-        pa_context_set_sink_mute_by_index(c, i->index, new_mute, do_pulse_success, NULL);
+        pa_operation_unref(pa_context_set_sink_mute_by_index(c, i->index, new_mute, do_pulse_success, NULL));
         printf("%s", new_mute ? "Speakers muted" : "Speakers on");
         break;
     }
@@ -137,7 +137,7 @@ static void do_pulse_vs(pa_context *c, const pa_sink_info *i, int eol, void *use
             ? normal_volume : new_volume;
         new_volume = PA_CLAMP_UNLIKELY(new_volume, (int)PA_VOLUME_MUTED, normal_volume);
         pa_cvolume_scale(&new_cvol, new_volume);
-        pa_context_set_sink_volume_by_index(c, i->index, &new_cvol, do_pulse_success, NULL);
+        pa_operation_unref(pa_context_set_sink_volume_by_index(c, i->index, &new_cvol, do_pulse_success, NULL));
         char buf[PA_VOLUME_SNPRINT_MAX] = {0};
         pa_volume_snprint(buf, PA_VOLUME_SNPRINT_MAX, new_volume);
         printf("Speakers %s", buf);
@@ -162,7 +162,7 @@ static void do_pulse_m(pa_context *c, const pa_source_info *i, int eol, void *us
 
     assert(i);
     int new_mute = !i->mute;
-    pa_context_set_source_mute_by_index(c, i->index, new_mute, do_pulse_success, NULL);
+    pa_operation_unref(pa_context_set_source_mute_by_index(c, i->index, new_mute, do_pulse_success, NULL));
     printf("%s", new_mute ? "Mic muted" : "Mic on");
 }
 
@@ -171,10 +171,10 @@ static void do_pulse_server_info(pa_context *c, const pa_server_info *i, void *u
     switch (pulse_op) {
     case 'v':
     case 's':
-        pa_context_get_sink_info_by_name(c, i->default_sink_name, do_pulse_vs, NULL);
+        pa_operation_unref(pa_context_get_sink_info_by_name(c, i->default_sink_name, do_pulse_vs, NULL));
         break;
     case 'm':
-        pa_context_get_source_info_by_name(c, i->default_source_name, do_pulse_m, NULL);
+        pa_operation_unref(pa_context_get_source_info_by_name(c, i->default_source_name, do_pulse_m, NULL));
         break;
     }
 }
@@ -207,7 +207,7 @@ static void pulse_sm(pa_context *c, void *userdata) {
         pulse_quit(1);
         break;
     case PA_CONTEXT_READY:
-        pa_context_get_server_info(c, do_pulse_server_info, NULL);
+        pa_operation_unref(pa_context_get_server_info(c, do_pulse_server_info, NULL));
         break;
     default:
         break;
